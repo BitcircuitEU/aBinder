@@ -6,6 +6,7 @@ class SocketIO {
         Gui, New, +hWndhWnd
         
         this.hWnd := hWnd
+        this.connected := false
         
         Gui, Add, ActiveX, vWB, Shell.Explorer
         Gui, %hOld%: Default
@@ -25,14 +26,19 @@ class SocketIO {
                     . "sock.on('message', function(data){ ahk_event('Message', data); });"
                     . "sock.on('loginResponse', function(data){ ahk_event('LoginResponse', data); });"
                     . "sock.on('disconnect', function(){ ahk_event('Disconnect', 'disconnected'); });"
-                    . "ahk_event('Connect', 'connected');}"
+                    . "sock.on('connect', function(){ ahk_event('Connect', 'connected'); });"
+                    . "sock.on('connect_error', function(){ ahk_event('ConnectError', 'error'); });}"
                     . "function sockEmit(type, content){ if(sock) sock.emit(type, content); }`n"
         this.document.body.appendChild(Script)
-        this.Connect()
     }
     
     Connect() {
-        this.document.parentWindow.sockConnect()
+        try {
+            this.document.parentWindow.sockConnect()
+        } catch e {
+            OutputDebug, [Socket.IO] Connect Error: %e%
+            return false
+        }
     }
     
     _Event(EventName, Event) {
@@ -45,6 +51,7 @@ class SocketIO {
     
     Close() {
         this.document.parentWindow.sock.close()
+        this.connected := false
     }
     
     Disconnect() {
@@ -57,12 +64,15 @@ class SocketIO {
 }
 
 class socketClass extends SocketIO {
-    OnConnect() {
-        OutputDebug, [Socket.IO] <- Pong 
-    }
-    
     OnConnectError(data) {
         OutputDebug, [Socket.IO] <- CON ERROR 
+        MsgBox, 16, Verbindungsfehler, Es konnte keine Verbindung zum Server hergestellt werden. Überprüfe deine Internetverbindung oder probiere es später erneut.
+        ExitApp
+    }
+
+    OnConnect() {
+        OutputDebug, [Socket.IO] <- Pong 
+        this.connected := true
     }
 
     OnConnected(data) {
