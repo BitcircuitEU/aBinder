@@ -1,44 +1,48 @@
-# samp-keybinder
+# aBinder
+## Advanced Binding Made Simple
 
-## Overview
-This project is an AutoHotkey keybinder for GTA San Andreas Multiplayer (SA:MP) that features a user authentication GUI, a SocketIO connection, and a modern dark-themed main GUI with various functionalities.
+## Übersicht
+aBinder ist ein AutoHotkey Keybinder für GTA San Andreas Multiplayer (SA:MP), entwickelt für Nova Network. 
+Der Binder verfügt über ein Authentifizierungssystem und bidirektionale Kommunikation über Socket.IO
 
-## Project Structure
-```
-samp-keybinder
-├── src
-│   ├── main.ahk          ; Entry point for the application
-│   ├── GUI
-│   │   ├── auth.ahk     ; User authentication GUI
-│   │   ├── main_gui.ahk  ; Main GUI layout with tab menu
-│   │   └── custom_buttons.ahk ; Custom buttons for window control
-│   ├── libs
-│   │   ├── JSON.ahk     ; JSON parsing and generation functions
-│   │   └── SocketIO.ahk ; SocketIO connection management
-│   └── utils
-│       └── theme.ahk    ; Functions for applying a dark theme
-├── README.md             ; Project documentation
-└── LICENSE               ; Licensing information
-```
+## Funktionen
+- Benutzerauthentifizierung mit Benutzername und Passwort
+- SocketIO-Verbindung für bidirektionale Kommunikation (Austausch von Positionsdaten etc.)
+- Keybinds Management
+- Textbinds Management
+- Posbinds Management
+- Frakbinds Management
+- Groupbinds Management
+- Overlay Management
+- Grundlegende Einstellungen
+- Node.JS SocketIO Server im server/ Ordner enthalten
 
-## Features
-- User authentication with username and password.
-- SocketIO connection to a local server at `127.0.0.1:4325`.
-- Modern dark-themed GUI with a tab menu for easy navigation.
-- Custom buttons for minimizing and closing the application window.
+## Mitwirken
+Wir freuen uns über jede Form der Mitarbeit am Projekt! So können Sie beitragen:
 
-## Setup Instructions
-1. Ensure you have AutoHotkey installed on your system.
-2. Clone or download the repository.
-3. Navigate to the `src` directory.
-4. Run `main.ahk` to start the application.
+### Fork & Pull Request
+1. Forken Sie das Repository
+2. Erstellen Sie einen Feature Branch (`git checkout -b feature/IhrFeature`)
+3. Committen Sie Ihre Änderungen (`git commit -m 'Feature hinzugefügt'`)
+4. Pushen Sie den Branch (`git push origin feature/IhrFeature`)
+5. Öffnen Sie einen Pull Request
 
-## Usage Guidelines
-- Enter your username and password in the authentication GUI to connect to the server.
-- Use the main GUI to access various functionalities such as keybinds and settings.
+### Entwicklungsumgebung
+- AutoHotkey V1 (ANSI32)
+- Git
 
-## Contributing
-Contributions are welcome! Please fork the repository and submit a pull request for any enhancements or bug fixes.
+### Richtlinien
+- Kommentiere deinen Code
+- Folge dem bestehenden Codestil
+- Teste deine Änderungen
+- Beschreiben deine Änderungen im Pull Request
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+Bei Fragen kannst du dich gerne bei mir im Forum und im Discord melden oder ein Issue in der Repo anlegen. (Discord: abrucci)
+
+
+## Links
+- [GitHub Repository](https://github.com/BitcircuitEU/aBinder)
+- [Nova Network](https://nova-network.one)
+
+## Lizenz
+BSD 2-Clause License - siehe LICENSE.md Datei
