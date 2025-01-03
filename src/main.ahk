@@ -82,6 +82,7 @@ global settingsIconHoverPath := iconsDir "\settings_icon_hover.png"
 ; Sidebar
 global MainTab
 global ActiveTab := "Home"
+global TooltipTexts := ["Home", "Keybinds", "Textbinds", "Posbinds", "Frakbinds", "Groupbinds", "Overlays", "Settings"]
 
 ; Download icons if not present
 IfNotExist, %novaIconPath%
@@ -447,9 +448,8 @@ WM_MOUSEMOVE(wParam, lParam, msg, hwnd) {
                 GuiControl,, Static6, %loginIconHoverPath%
             }
         } else {
-            if (TooltipTexts.HasKey(controlName)) {
-                ToolTip, % TooltipTexts[controlName], mouseX + 15, mouseY + 15
-                tooltipShown := true
+            if (HasVal(TooltipTexts, controlName)) {
+                ToolTip, % controlName, mouseX + 15, mouseY + 15
             } else {
                 ToolTip
             }
@@ -536,4 +536,13 @@ WM_KEYDOWN(wParam, lParam) {
         }
     }
     return
+}
+
+HasVal(haystack, needle) {
+	if !(IsObject(haystack)) || (haystack.Length() = 0)
+		return 0
+	for index, value in haystack
+		if (value = needle)
+			return index
+	return 0
 }
