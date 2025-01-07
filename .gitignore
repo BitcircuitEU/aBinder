@@ -1,0 +1,9 @@
+.vscode/
+.DS_Store
+server/node_modules
+server/package-lock.json
+server/.env
+client/.vs
+client/build
+client/out
+

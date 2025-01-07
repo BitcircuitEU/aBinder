@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120" viewBox="0 0 240 120">
+    <!-- Logo Text -->
+    <text x="120" y="50" font-family="Segoe UI" font-weight="bold" font-size="36" fill="#007acc" text-anchor="middle">
+        aBinder
+    </text>
+    
+    <!-- Slogan -->
+    <text x="120" y="80" font-family="Segoe UI" font-size="14" fill="#666666" text-anchor="middle">
+        Advanced Binding Made Simple.
+    </text>
+</svg> 

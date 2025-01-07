@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>styles/dark_theme.qss</file>
+        <file>styles/light_theme.qss</file>
+        <file>icons/home.svg</file>
+        <file>icons/keybinds.svg</file>
+        <file>icons/textbinds.svg</file>
+        <file>icons/commandbinds.svg</file>
+        <file>icons/posbinds.svg</file>
+        <file>icons/frakbinds.svg</file>
+        <file>icons/groupbinds.svg</file>
+        <file>icons/overlays.svg</file>
+        <file>icons/settings.svg</file>
+        <file>icons/logo.svg</file>
+        <file>icons/minimize.svg</file>
+        <file>icons/close.svg</file>
+        <file>icons/signout.svg</file>
+    </qresource>
+</RCC> 

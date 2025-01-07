@@ -1,0 +1,201 @@
+/* Globale Stile */
+QWidget {
+    background-color: #1e1e1e;
+    color: #ffffff;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Login-Fenster */
+QWidget#loginWidget {
+    background-color: #1e1e1e;
+    border: 1px solid #3d3d3d;
+}
+
+QWidget#loginContent {
+    background-color: #1e1e1e;
+}
+
+/* Titelleiste */
+QWidget#titleBar {
+    background-color: #2d2d2d;
+    border-bottom: 1px solid #3d3d3d;
+}
+
+QLabel#titleLabel {
+    color: #ffffff;
+    font-size: 12px;
+    padding: 0 10px;
+    background-color: transparent;
+}
+
+QPushButton#minimizeButton, QPushButton#closeButton {
+    background: transparent;
+    border: none;
+    padding: 7px;
+}
+
+QPushButton#minimizeButton:hover {
+    background-color: #404040;
+}
+
+QPushButton#minimizeButton:hover::icon {
+    fill: #ffffff;
+}
+
+QPushButton#closeButton:hover {
+    background-color: #c42b1c;
+}
+
+QPushButton#closeButton:hover::icon {
+    fill: #ffffff;
+}
+
+/* Eingabefelder */
+QLineEdit {
+    padding: 8px;
+    border: 1px solid #3d3d3d;
+    border-radius: 4px;
+    background-color: #2d2d2d;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border: 1px solid #007acc;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #007acc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    outline: none;
+}
+
+QPushButton:hover {
+    background-color: #0098ff;
+}
+
+QPushButton:pressed {
+    background-color: #005c99;
+}
+
+QPushButton:focus {
+    border: 2px solid #0098ff;
+    background-color: #006bb3;
+}
+
+/* Sidebar */
+QWidget#sidebar {
+    background-color: #252526;
+    border-right: 1px solid #3d3d3d;
+}
+
+QPushButton[class="sidebar-button"] {
+    background-color: transparent;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+QPushButton[class="sidebar-button"]:hover {
+    background-color: #2d2d2d;
+}
+
+QPushButton[class="sidebar-button"]:checked {
+    background-color: #37373d;
+}
+
+/* Content Area */
+QStackedWidget {
+    background-color: #1e1e1e;
+}
+
+QLabel {
+    color: #ffffff;
+    font-size: 14px;
+}
+
+/* Scrollbars */
+QScrollBar:vertical {
+    border: none;
+    background: #1e1e1e;
+    width: 10px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #424242;
+    min-height: 20px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    border: none;
+    background: #1e1e1e;
+    height: 10px;
+    margin: 0px;
+}
+
+QScrollBar::handle:horizontal {
+    background: #424242;
+    min-width: 20px;
+    border-radius: 5px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    width: 0px;
+}
+
+QPushButton#registerButton {
+    background-color: transparent;
+    color: #007acc;
+    border: 1px solid #007acc;
+}
+
+QPushButton#registerButton:hover {
+    background-color: #007acc;
+    color: white;
+}
+
+QPushButton#registerButton:focus {
+    border: 2px solid #0098ff;
+    background-color: rgba(0, 122, 204, 0.1);
+}
+
+QPushButton#backButton {
+    background-color: transparent;
+    color: #666666;
+    border: 1px solid #666666;
+}
+
+QPushButton#backButton:hover {
+    background-color: #666666;
+    color: white;
+}
+
+QPushButton#backButton:focus {
+    border: 2px solid #808080;
+    background-color: rgba(102, 102, 102, 0.1);
+}
+
+QPushButton#logoutButton {
+    background-color: #c42b1c;
+    color: white;
+    border: none;
+}
+
+QPushButton#logoutButton:hover {
+    background-color: #d63c2c;
+}
+
+QPushButton#logoutButton:focus {
+    border: 2px solid #e64d3d;
+    background-color: #b32619;
+} 
