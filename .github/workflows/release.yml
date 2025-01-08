@@ -93,7 +93,20 @@ jobs:
       working-directory: client/build/Release
       shell: pwsh
       run: |
-        $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=aBinder" -KeyUsage DigitalSignature -FriendlyName "aBinder Certificate" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+        $cert = New-SelfSignedCertificate `
+          -Type Custom `
+          -Subject "CN=aBinder, O=Bitcircuit, L=Berlin, S=Berlin, C=DE" `
+          -KeyUsage DigitalSignature `
+          -FriendlyName "aBinder Certificate" `
+          -CertStoreLocation "Cert:\CurrentUser\My" `
+          -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}") `
+          -KeyExportPolicy Exportable `
+          -KeySpec Signature `
+          -KeyLength 2048 `
+          -KeyAlgorithm RSA `
+          -HashAlgorithm SHA256 `
+          -NotAfter (Get-Date).AddYears(5)
+        
         $certPath = "certificate.pfx"
         $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
         Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
