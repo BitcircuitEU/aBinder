@@ -120,6 +120,13 @@ jobs:
                     -HashAlgorithm SHA256 `
                     -NotAfter (Get-Date).AddYears(5)
                 
+                # Zertifikat als Root CA installieren
+                Write-Host "Installiere Zertifikat als Root CA..."
+                $rootStore = New-Object System.Security.Cryptography.X509Certificates.X509Store "Root", "LocalMachine"
+                $rootStore.Open("ReadWrite")
+                $rootStore.Add($cert)
+                $rootStore.Close()
+                
                 # Zertifikat exportieren
                 Write-Host "Exportiere Zertifikat..."
                 $certPath = "certificate.pfx"
@@ -141,10 +148,13 @@ jobs:
                     -FilePath $FilePath `
                     -Certificate $cert `
                     -TimestampServer "http://timestamp.sectigo.com" `
-                    -HashAlgorithm SHA256
+                    -HashAlgorithm SHA256 `
+                    -IncludeChain All
                 
                 # Überprüfe das Ergebnis
                 Write-Host "Signatur-Status: $($result.Status)"
+                Write-Host "Status Message: $($result.StatusMessage)"
+                
                 if ($result.Status -ne "Valid") {
                     throw "Signierung fehlgeschlagen: $($result.StatusMessage)"
                 }
