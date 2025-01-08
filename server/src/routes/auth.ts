@@ -3,6 +3,11 @@ import { AuthService } from '../services/authService';
 
 const router = Router();
 
+// Health Check Endpoint
+router.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
+
 router.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -39,6 +44,11 @@ router.post('/login', async (req, res) => {
     }
 
     const { user, token } = await AuthService.login(username, password);
+
+    // Speichere den Token für Socket.IO-Authentifizierung
+    global.validTokens = global.validTokens || new Map();
+    global.validTokens.set(token, username);
+
     res.json({ 
       message: 'Login erfolgreich',
       user: {

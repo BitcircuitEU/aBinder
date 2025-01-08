@@ -186,16 +186,37 @@ QPushButton#backButton:focus {
 }
 
 QPushButton#logoutButton {
-    background-color: #c42b1c;
-    color: white;
+    background-color: transparent;
     border: none;
+    padding: 5px;
+    border-radius: 15px;
+    transition: background-color 0.2s;
 }
 
 QPushButton#logoutButton:hover {
-    background-color: #d63c2c;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-QPushButton#logoutButton:focus {
-    border: 2px solid #e64d3d;
-    background-color: #b32619;
+QPushButton#logoutButton:pressed {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+QPushButton#minimizeButton, QPushButton#closeButton {
+    background-color: transparent;
+    border: none;
+    padding: 5px;
+    border-radius: 15px;
+    transition: background-color 0.2s;
+}
+
+QPushButton#minimizeButton:hover, QPushButton#closeButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+QPushButton#minimizeButton:pressed, QPushButton#closeButton:pressed {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+QPushButton#closeButton:hover {
+    background-color: #ff4444;
 } 

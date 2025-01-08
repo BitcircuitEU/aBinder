@@ -28,26 +28,26 @@ QLabel#titleLabel {
     background-color: transparent;
 }
 
+/* Titelleiste Buttons */
 QPushButton#minimizeButton, QPushButton#closeButton {
-    background: transparent;
+    background-color: transparent;
     border: none;
-    padding: 7px;
+    padding: 5px;
+    border-radius: 15px;
+    transition: background-color 0.2s;
 }
 
-QPushButton#minimizeButton:hover {
-    background-color: #e0e0e0;
+QPushButton#minimizeButton:hover, QPushButton#closeButton:hover {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
-QPushButton#minimizeButton:hover::icon {
-    fill: #000000;
+QPushButton#minimizeButton:pressed, QPushButton#closeButton:pressed {
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 QPushButton#closeButton:hover {
-    background-color: #c42b1c;
-}
-
-QPushButton#closeButton:hover::icon {
-    fill: #ffffff;
+    background-color: #ff4444;
+    color: white;
 }
 
 /* Eingabefelder */
@@ -185,17 +185,24 @@ QPushButton#backButton:focus {
     background-color: rgba(102, 102, 102, 0.1);
 }
 
+/* Logout Button */
 QPushButton#logoutButton {
-    background-color: #c42b1c;
-    color: white;
+    background-color: transparent;
     border: none;
+    padding: 5px;
+    border-radius: 15px;
+    transition: background-color 0.2s;
 }
 
 QPushButton#logoutButton:hover {
-    background-color: #d63c2c;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+QPushButton#logoutButton:pressed {
+    background-color: rgba(0, 0, 0, 0.2);
 }
 
 QPushButton#logoutButton:focus {
-    border: 2px solid #e64d3d;
-    background-color: #b32619;
+    outline: 1px solid #000000;
+    background-color: rgba(0, 0, 0, 0.05);
 } 

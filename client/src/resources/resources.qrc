@@ -15,5 +15,6 @@
         <file>icons/minimize.svg</file>
         <file>icons/close.svg</file>
         <file>icons/signout.svg</file>
+        <file>icons/chat.svg</file>
     </qresource>
 </RCC> 

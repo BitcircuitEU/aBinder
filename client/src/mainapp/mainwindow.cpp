@@ -54,6 +54,13 @@ void MainWindow::createTitleBar()
     titleLabel = new QLabel("aBinder - Startseite", this);
     titleLabel->setObjectName("titleLabel");
     
+    // Socket Status
+    socketStatusLabel = new QLabel(this);
+    socketStatusLabel->setObjectName("socketStatusLabel");
+    socketStatusLabel->setAlignment(Qt::AlignCenter);
+    socketStatusLabel->setMinimumWidth(150);
+    socketStatusLabel->setStyleSheet("QLabel { background-color: transparent; }");
+    
     // Logout Button
     logoutButton = new QPushButton(this);
     logoutButton->setObjectName("logoutButton");
@@ -77,6 +84,7 @@ void MainWindow::createTitleBar()
 
     titleBarLayout->addWidget(titleLabel);
     titleBarLayout->addStretch();
+    titleBarLayout->addWidget(socketStatusLabel);
     titleBarLayout->addWidget(logoutButton);
     titleBarLayout->addWidget(minimizeButton);
     titleBarLayout->addWidget(closeButton);
@@ -87,6 +95,29 @@ void MainWindow::createTitleBar()
     connect(minimizeButton, &QPushButton::clicked, this, &MainWindow::onMinimizeClicked);
     connect(closeButton, &QPushButton::clicked, this, &MainWindow::onCloseClicked);
     connect(logoutButton, &QPushButton::clicked, this, &MainWindow::onLogoutClicked);
+    
+    // Socket Status Verbindungen
+    auto& socket = SocketManager::instance();
+    connect(&socket, &SocketManager::connected, this, [this]() {
+        updateSocketStatus(true);
+    });
+    connect(&socket, &SocketManager::disconnected, this, [this]() {
+        updateSocketStatus(false);
+    });
+    connect(&socket, &SocketManager::connectionStatusChanged, this, [this](SocketManager::ConnectionStatus status) {
+        updateSocketStatus(status == SocketManager::ConnectionStatus::Connected);
+    });
+    
+    // Initialen Status setzen
+    updateSocketStatus(socket.isConnected());
+}
+
+void MainWindow::updateSocketStatus(bool connected)
+{
+    QString statusText = QString("Socket Status: <span style='color: %1;'>%2</span>")
+        .arg(connected ? "#55aa55" : "#ff5555")  // Grün oder Rot
+        .arg(connected ? "Verbunden" : "Getrennt");
+    socketStatusLabel->setText(statusText);
 }
 
 void MainWindow::mousePressEvent(QMouseEvent *event)
@@ -139,6 +170,7 @@ void MainWindow::createSidebar()
 
     MenuButton buttons[] = {
         {":/icons/home.svg", "Startseite"},
+        {":/icons/chat.svg", "Chat"},
         {":/icons/keybinds.svg", "Tastenbelegungen"},
         {":/icons/textbinds.svg", "Textbelegungen"},
         {":/icons/commandbinds.svg", "Befehlsbelegungen"},
@@ -176,9 +208,13 @@ void MainWindow::createPages()
     contentStack = new QStackedWidget(this);
     contentLayout->addWidget(contentStack);
 
+    // Chat-Widget erstellen
+    chatWidget = new ChatWidget(this);
+
     // Platzhalter-Seiten erstellen
     QStringList pageTitles = {
         "Startseite",
+        "Chat",
         "Tastenbelegungen",
         "Textbelegungen",
         "Befehlsbelegungen",
@@ -189,14 +225,17 @@ void MainWindow::createPages()
         "Einstellungen"
     };
 
-    for (const QString &title : pageTitles) {
-        QWidget *page = new QWidget(this);
-        QVBoxLayout *layout = new QVBoxLayout(page);
-        
-        QLabel *label = new QLabel(title, this);
-        label->setAlignment(Qt::AlignCenter);
-        layout->addWidget(label);
-        
+    for (int i = 0; i < pageTitles.size(); ++i) {
+        QWidget* page;
+        if (i == Chat) {
+            page = chatWidget;
+        } else {
+            page = new QWidget(this);
+            QVBoxLayout *layout = new QVBoxLayout(page);
+            QLabel *label = new QLabel(pageTitles[i], this);
+            label->setAlignment(Qt::AlignCenter);
+            layout->addWidget(label);
+        }
         contentStack->addWidget(page);
     }
 }
@@ -220,6 +259,9 @@ void MainWindow::onSidebarButtonClicked(int index)
     switch (index) {
         case Home:
             pageTitle = "Startseite";
+            break;
+        case Chat:
+            pageTitle = "Chat";
             break;
         case Keybinds:
             pageTitle = "Keybinds";
@@ -248,6 +290,9 @@ void MainWindow::onSidebarButtonClicked(int index)
     }
     titleLabel->setText("aBinder - " + pageTitle);
     
+    // Socket Status aktualisieren
+    updateSocketStatus(SocketManager::instance().isConnected());
+    
     for (int i = 0; i < sidebarButtons.size(); ++i) {
         sidebarButtons[i]->setChecked(i == index);
     }
@@ -255,6 +300,5 @@ void MainWindow::onSidebarButtonClicked(int index)
 
 void MainWindow::onLogoutClicked()
 {
-    QFile::remove(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/auth.dat");
     QApplication::quit();
 } 

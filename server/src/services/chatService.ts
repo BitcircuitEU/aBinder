@@ -213,10 +213,11 @@ export class ChatService {
       .limit(limit);
   }
 
-  static async getGlobalHistory(limit = 50): Promise<ChatMessage[]> {
+  static async getGlobalHistory(limit = 100): Promise<ChatMessage[]> {
     return await ChatMessageModel.find({ type: 'global' })
       .sort({ timestamp: -1 })
-      .limit(limit);
+      .limit(limit)
+      .exec();
   }
 
   static async getPrivateHistory(userId: string, otherUserId: string, limit = 50): Promise<ChatMessage[]> {

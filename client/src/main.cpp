@@ -1,6 +1,9 @@
 #include <QApplication>
 #include "login/loginwindow.h"
 #include "mainapp/mainwindow.h"
+#include <QDir>
+#include <QCoreApplication>
+#include <QSslSocket>
 
 int main(int argc, char *argv[])
 {

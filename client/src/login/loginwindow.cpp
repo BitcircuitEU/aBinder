@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QTimer>
 
 LoginWindow::LoginWindow(QWidget *parent)
     : QMainWindow(parent), isDragging(false)
@@ -12,12 +13,7 @@ LoginWindow::LoginWindow(QWidget *parent)
     
     setupUi();
     loadStyleSheet();
-
-    // Verbinde mit dem Server und versuche gespeicherte Anmeldedaten zu laden
-    SocketManager::instance().connectToServer();
-    if (SocketManager::instance().loadStoredAuth()) {
-        emit loginSuccessful();
-    }
+    setupConnections();
 }
 
 void LoginWindow::setupUi()
@@ -33,6 +29,15 @@ void LoginWindow::setupUi()
     // Erstelle Titelleiste
     createTitleBar();
 
+    // Status Label erstellen
+    statusLabel = new QLabel(this);
+    statusLabel->setObjectName("statusLabel");
+    statusLabel->setAlignment(Qt::AlignCenter);
+    statusLabel->setWordWrap(true);
+    statusLabel->setMinimumHeight(40);
+    statusLabel->hide();
+    mainLayout->addWidget(statusLabel);
+
     // Erstelle Seiten-Stack
     stackedWidget = new QStackedWidget(this);
     mainLayout->addWidget(stackedWidget);
@@ -44,8 +49,8 @@ void LoginWindow::setupUi()
     // Zeige Login-Seite als Standard
     stackedWidget->setCurrentWidget(loginPage);
 
-    // Verbinde mit dem Server
-    SocketManager::instance().connectToServer();
+    // Prüfe Server-Verfügbarkeit
+    checkServerAvailability();
 }
 
 void LoginWindow::createTitleBar()
@@ -123,24 +128,40 @@ void LoginWindow::onCloseClicked()
 
 void LoginWindow::onLoginClicked()
 {
-    loginButton->setEnabled(false);
-    loginButton->setText("Anmeldung läuft...");
+    qDebug() << "\n=== Neuer Login-Versuch gestartet ===";
+    
+    if (usernameEdit->text().isEmpty() || passwordEdit->text().isEmpty()) {
+        qDebug() << "Fehler: Leere Eingabefelder";
+        setStatusMessage("Bitte fülle alle Felder aus", true);
+        return;
+    }
 
-    // Verbinde die Socket.IO Signale
-    connect(&SocketManager::instance(), &SocketManager::loginSuccess, this, [this](const QString& username) {
-        loginButton->setEnabled(true);
-        loginButton->setText("Anmelden");
-        emit loginSuccessful();
-    });
-
-    connect(&SocketManager::instance(), &SocketManager::loginError, this, [this](const QString& message) {
-        loginButton->setEnabled(true);
-        loginButton->setText("Anmelden");
-        QMessageBox::warning(this, "Fehler", "Anmeldung fehlgeschlagen: " + message);
-    });
-
-    // Sende Login-Anfrage
-    SocketManager::instance().login(usernameEdit->text(), passwordEdit->text());
+    QString username = usernameEdit->text();
+    QString password = passwordEdit->text();
+    
+    qDebug() << "Versuche Login für Benutzer:" << username;
+    
+    // Deaktiviere UI während des Login-Versuchs
+    enableLoginForm(false);
+    setStatusMessage("Anmeldung läuft...");
+    
+    // Stelle sicher, dass die Verbindungen korrekt sind
+    QObject::disconnect(&SocketManager::instance(), &SocketManager::loginSuccess, this, &LoginWindow::onLoginSuccess);
+    QObject::disconnect(&SocketManager::instance(), &SocketManager::loginError, this, &LoginWindow::onLoginError);
+    
+    QObject::connect(&SocketManager::instance(), &SocketManager::loginSuccess, this, &LoginWindow::onLoginSuccess, Qt::UniqueConnection);
+    QObject::connect(&SocketManager::instance(), &SocketManager::loginError, this, &LoginWindow::onLoginError, Qt::UniqueConnection);
+    
+    qDebug() << "Signal-Verbindungen hergestellt";
+    
+    try {
+        SocketManager::instance().login(username, password);
+        qDebug() << "Login-Anfrage gesendet";
+    } catch (const std::exception& e) {
+        qDebug() << "FEHLER beim Login-Versuch:" << e.what();
+        setStatusMessage("Fehler bei der Anmeldung", true);
+        enableLoginForm(true);
+    }
 }
 
 void LoginWindow::loadStyleSheet()
@@ -206,8 +227,8 @@ void LoginWindow::createLoginPage()
     });
 
     // Enter-Taste Verbindungen
-    connect(usernameEdit, &QLineEdit::returnPressed, loginButton, &QPushButton::click);
-    connect(passwordEdit, &QLineEdit::returnPressed, loginButton, &QPushButton::click);
+    connect(usernameEdit, &QLineEdit::returnPressed, this, &LoginWindow::onLoginClicked);
+    connect(passwordEdit, &QLineEdit::returnPressed, this, &LoginWindow::onLoginClicked);
 
     stackedWidget->addWidget(loginPage);
 }
@@ -278,30 +299,30 @@ void LoginWindow::createRegisterPage()
 
 void LoginWindow::onRegisterClicked()
 {
-    // Überprüfe, ob die Passwörter übereinstimmen
-    if (regPasswordEdit->text() != regConfirmPasswordEdit->text()) {
-        QMessageBox::warning(this, "Fehler", "Die Passwörter stimmen nicht überein!");
+    if (regUsernameEdit->text().isEmpty() || regPasswordEdit->text().isEmpty() || regConfirmPasswordEdit->text().isEmpty()) {
+        setStatusMessage("Bitte fülle alle Felder aus", true);
         return;
     }
 
-    registerButton->setEnabled(false);
-    registerButton->setText("Registrierung läuft...");
+    if (regPasswordEdit->text() != regConfirmPasswordEdit->text()) {
+        setStatusMessage("Passwörter stimmen nicht überein", true);
+        return;
+    }
 
-    // Verbinde die Socket.IO Signale
-    connect(&SocketManager::instance(), &SocketManager::registerSuccess, this, [this]() {
-        registerButton->setEnabled(true);
-        registerButton->setText("Account erstellen");
-        QMessageBox::information(this, "Erfolg", "Registrierung erfolgreich!\nBitte melden Sie sich jetzt an.");
-        onBackToLoginClicked();
-    });
+    if (regPasswordEdit->text().length() < 6) {
+        setStatusMessage("Das Passwort muss mindestens 6 Zeichen lang sein", true);
+        return;
+    }
 
-    connect(&SocketManager::instance(), &SocketManager::registerError, this, [this](const QString& message) {
-        registerButton->setEnabled(true);
-        registerButton->setText("Account erstellen");
-        QMessageBox::warning(this, "Fehler", "Registrierung fehlgeschlagen: " + message);
-    });
+    if (regUsernameEdit->text().length() < 3) {
+        setStatusMessage("Der Benutzername muss mindestens 3 Zeichen lang sein", true);
+        return;
+    }
 
-    // Sende Registrierungs-Anfrage
+    enableRegisterForm(false);
+    setStatusMessage("Registrierung läuft...");
+    
+    // Direkt die Registrierung aufrufen, ohne neue Signal-Verbindungen
     SocketManager::instance().registerUser(regUsernameEdit->text(), regPasswordEdit->text());
 }
 
@@ -314,4 +335,167 @@ void LoginWindow::onBackToLoginClicked()
     regUsernameEdit->clear();
     regPasswordEdit->clear();
     regConfirmPasswordEdit->clear();
+}
+
+void LoginWindow::setupConnections()
+{
+    SocketManager& socketManager = SocketManager::instance();
+    connect(&socketManager, &SocketManager::loginSuccess, this, &LoginWindow::onLoginSuccess);
+    connect(&socketManager, &SocketManager::loginError, this, &LoginWindow::onLoginError);
+    connect(&socketManager, &SocketManager::registerSuccess, this, &LoginWindow::onRegisterSuccess);
+    connect(&socketManager, &SocketManager::registerError, this, &LoginWindow::onRegisterError);
+    connect(&socketManager, &SocketManager::serverUnavailable, this, &LoginWindow::onServerError);
+    
+    // Nur aktivieren wenn vorher deaktiviert
+    connect(&socketManager, &SocketManager::serverAvailable, this, [this]() {
+        if (!usernameEdit->isEnabled()) {
+            enableLoginForm(true);
+        }
+        if (!regUsernameEdit->isEnabled()) {
+            enableRegisterForm(true);
+        }
+        statusLabel->hide();
+    });
+}
+
+void LoginWindow::showLoginForm()
+{
+    stackedWidget->setCurrentWidget(loginPage);
+    titleLabel->setText("aBinder - Anmeldung");
+    
+    // Felder zurücksetzen
+    regUsernameEdit->clear();
+    regPasswordEdit->clear();
+    regConfirmPasswordEdit->clear();
+}
+
+void LoginWindow::showRegisterForm()
+{
+    stackedWidget->setCurrentWidget(registerPage);
+    titleLabel->setText("aBinder - Registrierung");
+    
+    // Felder zurücksetzen
+    usernameEdit->clear();
+    passwordEdit->clear();
+}
+
+void LoginWindow::onServerError()
+{
+    statusLabel->setText("Fehler beim Verbinden mit dem Server");
+    statusLabel->setStyleSheet("color: red;");
+    statusLabel->show();
+    enableLoginForm(true);
+    enableRegisterForm(true);
+}
+
+void LoginWindow::onLoginSuccess(const QString& username)
+{
+    qDebug() << "=== Login erfolgreich für Benutzer:" << username << "===";
+    setStatusMessage("Login erfolgreich!");
+    
+    // Deaktiviere weitere Login-Versuche
+    enableLoginForm(false);
+    
+    // Verzögerung erhöhen und sicherstellen, dass das Fenster nicht geschlossen wird
+    QTimer *successTimer = new QTimer(this);
+    successTimer->setSingleShot(true);
+    connect(successTimer, &QTimer::timeout, this, [this, username]() {
+        qDebug() << "=== Starte Main-App für Benutzer:" << username << "===";
+        emit loginSuccessful();
+    });
+    successTimer->start(1000);
+}
+
+void LoginWindow::onLoginError(const QString& error)
+{
+    qDebug() << "Login-Fehler:" << error;
+    setStatusMessage(error, true);
+    enableLoginForm(true);
+}
+
+void LoginWindow::onRegisterSuccess()
+{
+    setStatusMessage("Registrierung erfolgreich! Sie können sich jetzt anmelden.");
+    
+    // Felder zurücksetzen
+    regUsernameEdit->clear();
+    regPasswordEdit->clear();
+    regConfirmPasswordEdit->clear();
+    
+    // Formular wieder aktivieren
+    enableRegisterForm(true);
+    
+    // Zurück zur Login-Seite
+    stackedWidget->setCurrentWidget(loginPage);
+    titleLabel->setText("aBinder - Anmeldung");
+}
+
+void LoginWindow::onRegisterError(const QString& error)
+{
+    qDebug() << "Registrierungsfehler:" << error;
+    setStatusMessage(error, true);
+    enableRegisterForm(true);
+}
+
+void LoginWindow::setStatusMessage(const QString &message, bool isError)
+{
+    statusLabel->setText(message);
+    
+    if (isError) {
+        statusLabel->setStyleSheet("QLabel { background-color: #ff5555; color: white; padding: 10px; border-radius: 4px; margin: 10px; }");
+    } else {
+        statusLabel->setStyleSheet("QLabel { background-color: #55aa55; color: white; padding: 10px; border-radius: 4px; margin: 10px; }");
+    }
+    
+    statusLabel->show();
+    
+    // Nur bestimmte Meldungen automatisch ausblenden
+    if (!isError || 
+        (message.contains("erfolgreich") && !message.contains("nicht"))) {
+        QTimer::singleShot(5000, this, [this, message]() {
+            // Nur ausblenden, wenn sich die Meldung nicht geändert hat
+            if (statusLabel->text() == message) {
+                statusLabel->hide();
+            }
+        });
+    }
+}
+
+void LoginWindow::enableLoginForm(bool enable)
+{
+    usernameEdit->setEnabled(enable);
+    passwordEdit->setEnabled(enable);
+    loginButton->setEnabled(enable);
+    
+    // Wenn aktiviert, Fokus auf Benutzernamen setzen
+    if (enable && usernameEdit->text().isEmpty()) {
+        usernameEdit->setFocus();
+    }
+}
+
+void LoginWindow::enableRegisterForm(bool enable)
+{
+    regUsernameEdit->setEnabled(enable);
+    regPasswordEdit->setEnabled(enable);
+    regConfirmPasswordEdit->setEnabled(enable);
+    registerButton->setEnabled(enable);
+    
+    // Wenn aktiviert, Fokus auf Benutzernamen setzen
+    if (enable && regUsernameEdit->text().isEmpty()) {
+        regUsernameEdit->setFocus();
+    }
+}
+
+void LoginWindow::closeEvent(QCloseEvent *event)
+{
+    qDebug() << "\n=== Login-Fenster wird geschlossen ===";
+    qDebug() << "Aktuelle UI-Status:";
+    qDebug() << "- Login-Formular aktiviert:" << usernameEdit->isEnabled();
+    qDebug() << "- Benutzername ausgefüllt:" << !usernameEdit->text().isEmpty();
+    QMainWindow::closeEvent(event);
+}
+
+void LoginWindow::checkServerAvailability()
+{
+    SocketManager::instance().checkServerAvailability();
 } 

@@ -3,12 +3,68 @@ export interface User {
   username: string;
   password?: string;
   level?: number;
-  partner?: string;
+  partner?: string | { type: string; ref: 'User' };
   phoneNumber?: string;
   isBanned: boolean;
   binderRank: number; // 0: User, 1: Moderator, 2: Admin
   groupId: string;
   factionId: string;
+  
+  // Overlay Einstellungen
+  overlaySettings: {
+    inventory: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+    };
+    useTimer: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+    };
+    memberGroup: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+    };
+    memberFaction: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+    };
+    enemyFaction: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+      targetFactionId: string;
+    };
+    notes: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+      personalNotes: string[];
+      groupNotes: string[];
+      factionNotes: string[];
+    };
+    carDL: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+    };
+    sprintBar: {
+      enabled: boolean;
+      position: { x: number; y: number };
+      fontSize: number;
+      fontColor: string;
+    };
+  };
   
   // Integrierte Binds
   keybinds: Array<{
@@ -30,6 +86,14 @@ export interface User {
       z: number;
     };
     action: string;
+  }>;
+  groupBindTriggers: Array<{
+    groupBindId: string;
+    trigger: string;
+  }>;
+  factionBindTriggers: Array<{
+    factionBindId: string;
+    trigger: string;
   }>;
 }
 
@@ -70,6 +134,11 @@ export interface Faction {
     rank: number;
     isLeader: boolean;
   }[];
+  bindActions: Array<{
+    name: string;
+    action: string;
+    minRank: number;
+  }>;
 }
 
 export interface Group {
@@ -80,6 +149,11 @@ export interface Group {
     rank: number;
     isLeader: boolean;
   }[];
+  bindActions: Array<{
+    name: string;
+    action: string;
+    minRank: number;
+  }>;
 }
 
 export interface IRCChannel {

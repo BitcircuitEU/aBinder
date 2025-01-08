@@ -1,3 +1,4 @@
+.vs/
 .vscode/
 .DS_Store
 server/node_modules
@@ -6,4 +7,7 @@ server/.env
 client/.vs
 client/build
 client/out
-
+server/obj
+server/dist
+x64/
+server/.vscode
