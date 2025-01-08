@@ -76,6 +76,11 @@ jobs:
         # Run windeployqt
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
         
+        # Create ZIP file with version number
+        $version = Get-Content ../../VERSION.md -Raw
+        $version = $version.Trim()
+        Compress-Archive -Path * -DestinationPath "../aBinder_$version.zip" -Force
+        
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -93,6 +98,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: client/build/Release/aBinder.exe
-        asset_name: aBinder.exe
-        asset_content_type: application/octet-stream 
+        asset_path: client/build/aBinder_${{ steps.version.outputs.version }}.zip
+        asset_name: aBinder_${{ steps.version.outputs.version }}.zip
+        asset_content_type: application/zip 
