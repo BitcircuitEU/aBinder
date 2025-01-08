@@ -1,0 +1,74 @@
+name: Release Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Read version
+      id: version
+      shell: pwsh
+      run: |
+        $version = Get-Content VERSION.md -Raw
+        $version = $version.Trim()
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        echo "Version found: $version"
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '6.8.1'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        tools: 'tools_cmake'
+        
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+        
+    - name: Create Build Directory
+      run: mkdir client/build
+      
+    - name: Configure CMake
+      working-directory: client/build
+      run: cmake .. -DCMAKE_BUILD_TYPE=Release
+      
+    - name: Build
+      working-directory: client/build
+      run: cmake --build . --config Release
+      
+    - name: Copy Qt Dependencies
+      working-directory: client/build/Release
+      shell: pwsh
+      run: |
+        windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
+        
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: aBinder v${{ steps.version.outputs.version }}
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: client/build/Release/aBinder.exe
+        asset_name: aBinder.exe
+        asset_content_type: application/octet-stream 
