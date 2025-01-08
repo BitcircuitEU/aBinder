@@ -61,6 +61,27 @@ jobs:
     - name: Build
       working-directory: client/build
       run: cmake --build . --config Release
+
+    - name: Install Windows SDK
+      shell: pwsh
+      run: |
+        choco install windows-sdk-10-version-2004-all -y
+
+    - name: Create Code Signing Certificate
+      shell: pwsh
+      run: |
+        $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=aBinder" -KeyUsage DigitalSignature -FriendlyName "aBinder Certificate" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+        $certPath = "certificate.pfx"
+        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
+
+    - name: Sign Application
+      shell: pwsh
+      run: |
+        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Import-PfxCertificate -FilePath certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
+        $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object {$_.Subject -eq "CN=aBinder"}
+        Set-AuthenticodeSignature -FilePath "client/build/Release/release_files/aBinder.exe" -Certificate $cert -TimestampServer "http://timestamp.digicert.com"
       
     - name: Copy Dependencies
       working-directory: client/build/Release
