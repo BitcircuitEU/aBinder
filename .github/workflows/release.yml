@@ -35,8 +35,8 @@ jobs:
       shell: pwsh
       run: |
         choco install openssl -y
-        echo "OPENSSL_ROOT_DIR=C:/Program Files/OpenSSL-Win64" >> $env:GITHUB_ENV
-        echo "OPENSSL_LIBRARIES=C:/Program Files/OpenSSL-Win64/lib" >> $env:GITHUB_ENV
+        echo "OPENSSL_ROOT_DIR=C:/Program Files/OpenSSL" >> $env:GITHUB_ENV
+        echo "OPENSSL_LIBRARIES=C:/Program Files/OpenSSL/lib" >> $env:GITHUB_ENV
         
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
@@ -65,8 +65,8 @@ jobs:
         $Env:PATH = "$env:Qt6_DIR\bin;$Env:PATH"
         
         # Copy OpenSSL DLLs
-        Copy-Item "C:/Program Files/OpenSSL-Win64/bin/libssl-3-x64.dll" .
-        Copy-Item "C:/Program Files/OpenSSL-Win64/bin/libcrypto-3-x64.dll" .
+        Copy-Item "C:/Program Files/OpenSSL/bin/libssl-3-x64.dll" .
+        Copy-Item "C:/Program Files/OpenSSL/bin/libcrypto-3-x64.dll" .
         
         # Run windeployqt
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
