@@ -89,36 +89,90 @@ jobs:
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
         Pop-Location
 
-    - name: Create Code Signing Certificate
+    - name: Setup Code Signing
       working-directory: client/build/Release
       shell: pwsh
       run: |
-        $cert = New-SelfSignedCertificate `
-          -Type Custom `
-          -Subject "CN=aBinder, O=Bitcircuit, L=Berlin, S=Berlin, C=DE" `
-          -KeyUsage DigitalSignature `
-          -FriendlyName "aBinder Certificate" `
-          -CertStoreLocation "Cert:\CurrentUser\My" `
-          -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}") `
-          -KeyExportPolicy Exportable `
-          -KeySpec Signature `
-          -KeyLength 2048 `
-          -KeyAlgorithm RSA `
-          -HashAlgorithm SHA256 `
-          -NotAfter (Get-Date).AddYears(5)
+        function Setup-CodeSigning {
+            param (
+                [Parameter(Mandatory=$true)]
+                [string]$CertificatePassword,
+                [Parameter(Mandatory=$true)]
+                [string]$FilePath
+            )
+            
+            Write-Host "=== Starte Code-Signing Prozess ==="
+            
+            try {
+                # Zertifikat erstellen
+                Write-Host "Erstelle Code-Signing Zertifikat..."
+                $cert = New-SelfSignedCertificate `
+                    -Type Custom `
+                    -Subject "CN=aBinder, O=Bitcircuit, L=Berlin, S=Berlin, C=DE" `
+                    -KeyUsage DigitalSignature `
+                    -FriendlyName "aBinder Certificate" `
+                    -CertStoreLocation "Cert:\CurrentUser\My" `
+                    -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}") `
+                    -KeyExportPolicy Exportable `
+                    -KeySpec Signature `
+                    -KeyLength 2048 `
+                    -KeyAlgorithm RSA `
+                    -HashAlgorithm SHA256 `
+                    -NotAfter (Get-Date).AddYears(5)
+                
+                # Zertifikat exportieren
+                Write-Host "Exportiere Zertifikat..."
+                $certPath = "certificate.pfx"
+                $securePassword = ConvertTo-SecureString -String $CertificatePassword -Force -AsPlainText
+                Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $securePassword
+                
+                # Zertifikat importieren
+                Write-Host "Importiere Zertifikat..."
+                Import-PfxCertificate -FilePath $certPath -CertStoreLocation Cert:\CurrentUser\My -Password $securePassword
+                
+                # Überprüfe ob die Datei existiert
+                if (-not (Test-Path $FilePath)) {
+                    throw "Die zu signierende Datei wurde nicht gefunden: $FilePath"
+                }
+                
+                # Signiere die Anwendung
+                Write-Host "Signiere Anwendung..."
+                $result = Set-AuthenticodeSignature `
+                    -FilePath $FilePath `
+                    -Certificate $cert `
+                    -TimestampServer "http://timestamp.sectigo.com" `
+                    -HashAlgorithm SHA256
+                
+                # Überprüfe das Ergebnis
+                Write-Host "Signatur-Status: $($result.Status)"
+                if ($result.Status -ne "Valid") {
+                    throw "Signierung fehlgeschlagen: $($result.StatusMessage)"
+                }
+                
+                Write-Host "=== Code-Signing erfolgreich abgeschlossen ==="
+                return $true
+            }
+            catch {
+                Write-Host "=== FEHLER beim Code-Signing ===" -ForegroundColor Red
+                Write-Host $_.Exception.Message -ForegroundColor Red
+                return $false
+            }
+            finally {
+                # Aufräumen
+                if (Test-Path $certPath) {
+                    Remove-Item $certPath -Force
+                }
+            }
+        }
         
-        $certPath = "certificate.pfx"
-        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-        Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
-
-    - name: Sign Application
-      working-directory: client/build/Release
-      shell: pwsh
-      run: |
-        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-        Import-PfxCertificate -FilePath certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
-        $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object {$_.Subject -eq "CN=aBinder"}
-        Set-AuthenticodeSignature -FilePath "release_files/aBinder.exe" -Certificate $cert -TimestampServer "http://timestamp.digicert.com"
+        # Führe Code-Signing aus
+        $success = Setup-CodeSigning `
+            -CertificatePassword "${{ secrets.CERTIFICATE_PASSWORD }}" `
+            -FilePath "release_files/aBinder.exe"
+            
+        if (-not $success) {
+            exit 1
+        }
         
     - name: Packing Files
       working-directory: client/build/Release
