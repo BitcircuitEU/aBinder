@@ -41,7 +41,8 @@ jobs:
       
     - name: Configure CMake
       working-directory: client/build
-      run: cmake .. -DCMAKE_BUILD_TYPE=Release
+      run: |
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$env:Qt6_DIR
       
     - name: Build
       working-directory: client/build
@@ -51,6 +52,7 @@ jobs:
       working-directory: client/build/Release
       shell: pwsh
       run: |
+        $Env:PATH = "$env:Qt6_DIR\bin;$Env:PATH"
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
         
     - name: Create Release
