@@ -66,20 +66,28 @@ jobs:
       working-directory: client/build/Release
       shell: pwsh
       run: |
+        # Create temp directory for release files
+        New-Item -ItemType Directory -Path "release_files" -Force
+        
+        # Copy exe to release directory
+        Copy-Item "aBinder.exe" "release_files/"
+        
         # Set Qt bin to PATH for windeployqt
         $Env:PATH = "$env:Qt6_DIR\bin;$Env:PATH"
         
-        # Copy OpenSSL DLLs
-        Copy-Item "C:/Program Files/OpenSSL/bin/libssl-3-x64.dll" .
-        Copy-Item "C:/Program Files/OpenSSL/bin/libcrypto-3-x64.dll" .
+        # Copy OpenSSL DLLs to release directory
+        Copy-Item "C:/Program Files/OpenSSL/bin/libssl-3-x64.dll" "release_files/"
+        Copy-Item "C:/Program Files/OpenSSL/bin/libcrypto-3-x64.dll" "release_files/"
         
-        # Run windeployqt
+        # Run windeployqt on the exe in the release directory
+        Push-Location "release_files"
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
+        Pop-Location
         
-        # Create ZIP file with version number
+        # Create ZIP file with version number (only from release_files directory)
         $version = Get-Content ../../../VERSION.md -Raw
         $version = $version.Trim()
-        Compress-Archive -Path * -DestinationPath "../aBinder_$version.zip" -Force
+        Compress-Archive -Path "release_files/*" -DestinationPath "../aBinder_$version.zip" -Force
         
     - name: Create Release
       id: create_release
