@@ -70,10 +70,16 @@ if(WIN32)
         "${CMAKE_PREFIX_PATH}/bin/Qt6Svg.dll"
     )
 
-    # SSL DLLs
+    # SSL DLLs - Pfade aus Umgebungsvariablen oder Fallback
+    if(DEFINED ENV{OPENSSL_ROOT_DIR})
+        set(SSL_BIN_DIR "$ENV{OPENSSL_ROOT_DIR}/bin")
+    else()
+        set(SSL_BIN_DIR "${CMAKE_PREFIX_PATH}/bin")
+    endif()
+
     set(SSL_DLLS
-        "${CMAKE_PREFIX_PATH}/bin/libssl-3-x64.dll"
-        "${CMAKE_PREFIX_PATH}/bin/libcrypto-3-x64.dll"
+        "${SSL_BIN_DIR}/libssl-3-x64.dll"
+        "${SSL_BIN_DIR}/libcrypto-3-x64.dll"
         "${CMAKE_PREFIX_PATH}/plugins/tls/qopensslbackend.dll"
     )
 

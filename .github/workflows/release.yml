@@ -31,6 +31,13 @@ jobs:
         tools: 'tools_cmake'
         modules: 'qtwebsockets qtnetworkauth'
         
+    - name: Install OpenSSL
+      shell: pwsh
+      run: |
+        choco install openssl -y
+        echo "OPENSSL_ROOT_DIR=C:/Program Files/OpenSSL-Win64" >> $env:GITHUB_ENV
+        echo "OPENSSL_LIBRARIES=C:/Program Files/OpenSSL-Win64/lib" >> $env:GITHUB_ENV
+        
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -44,17 +51,24 @@ jobs:
       shell: pwsh
       run: |
         echo "Qt6_DIR: $env:Qt6_DIR"
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR="$env:OPENSSL_ROOT_DIR" -DOPENSSL_LIBRARIES="$env:OPENSSL_LIBRARIES"
       
     - name: Build
       working-directory: client/build
       run: cmake --build . --config Release
       
-    - name: Copy Qt Dependencies
+    - name: Copy Dependencies
       working-directory: client/build/Release
       shell: pwsh
       run: |
+        # Set Qt bin to PATH for windeployqt
         $Env:PATH = "$env:Qt6_DIR\bin;$Env:PATH"
+        
+        # Copy OpenSSL DLLs
+        Copy-Item "C:/Program Files/OpenSSL-Win64/bin/libssl-3-x64.dll" .
+        Copy-Item "C:/Program Files/OpenSSL-Win64/bin/libcrypto-3-x64.dll" .
+        
+        # Run windeployqt
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
         
     - name: Create Release
