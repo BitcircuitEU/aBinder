@@ -77,7 +77,7 @@ jobs:
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
         
         # Create ZIP file with version number
-        $version = Get-Content ../../VERSION.md -Raw
+        $version = Get-Content ../../../VERSION.md -Raw
         $version = $version.Trim()
         Compress-Archive -Path * -DestinationPath "../aBinder_$version.zip" -Force
         
