@@ -67,22 +67,6 @@ jobs:
       run: |
         choco install windows-sdk-10-version-2004-all -y
 
-    - name: Create Code Signing Certificate
-      shell: pwsh
-      run: |
-        $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=aBinder" -KeyUsage DigitalSignature -FriendlyName "aBinder Certificate" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
-        $certPath = "certificate.pfx"
-        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-        Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
-
-    - name: Sign Application
-      shell: pwsh
-      run: |
-        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
-        Import-PfxCertificate -FilePath certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
-        $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object {$_.Subject -eq "CN=aBinder"}
-        Set-AuthenticodeSignature -FilePath "client/build/Release/release_files/aBinder.exe" -Certificate $cert -TimestampServer "http://timestamp.digicert.com"
-      
     - name: Copy Dependencies
       working-directory: client/build/Release
       shell: pwsh
@@ -104,11 +88,33 @@ jobs:
         Push-Location "release_files"
         windeployqt.exe --release --no-translations --no-system-d3d-compiler --no-opengl-sw aBinder.exe
         Pop-Location
+
+    - name: Create Code Signing Certificate
+      working-directory: client/build/Release
+      shell: pwsh
+      run: |
+        $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=aBinder" -KeyUsage DigitalSignature -FriendlyName "aBinder Certificate" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
+        $certPath = "certificate.pfx"
+        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Export-PfxCertificate -Cert $cert -FilePath $certPath -Password $certPassword
+
+    - name: Sign Application
+      working-directory: client/build/Release
+      shell: pwsh
+      run: |
+        $certPassword = ConvertTo-SecureString -String "${{ secrets.CERTIFICATE_PASSWORD }}" -Force -AsPlainText
+        Import-PfxCertificate -FilePath certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password $certPassword
+        $cert = Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object {$_.Subject -eq "CN=aBinder"}
+        Set-AuthenticodeSignature -FilePath "release_files/aBinder.exe" -Certificate $cert -TimestampServer "http://timestamp.digicert.com"
         
+    - name: Packing Files
+      working-directory: client/build/Release
+      shell: pwsh
+      run: |          
         # Create ZIP file with version number (only from release_files directory)
         $version = Get-Content ../../../VERSION.md -Raw
         $version = $version.Trim()
-        Compress-Archive -Path "release_files/*" -DestinationPath "../aBinder_$version.zip" -Force
+        Compress-Archive -Path "release_files/*" -DestinationPath "../aBinder_$version.zip" -Force  
         
     - name: Create Release
       id: create_release
