@@ -29,6 +29,7 @@ jobs:
         target: 'desktop'
         arch: 'win64_msvc2022_64'
         tools: 'tools_cmake'
+        modules: 'qtwebsockets qtnetworkauth'
         
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
