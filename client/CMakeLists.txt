@@ -13,8 +13,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# Qt-Pfad setzen
-set(CMAKE_PREFIX_PATH "C:/Qt/6.8.1/msvc2022_64")
+# Qt-Pfad aus Umgebungsvariable oder Fallback
+if(DEFINED ENV{Qt6_DIR})
+    set(CMAKE_PREFIX_PATH $ENV{Qt6_DIR})
+else()
+    set(CMAKE_PREFIX_PATH "C:/Qt/6.8.1/msvc2022_64")
+endif()
 set(QT_PLUGIN_PATH "${CMAKE_PREFIX_PATH}/plugins")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Network WebSockets Svg)

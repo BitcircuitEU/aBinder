@@ -41,8 +41,10 @@ jobs:
       
     - name: Configure CMake
       working-directory: client/build
+      shell: pwsh
       run: |
-        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$env:Qt6_DIR
+        echo "Qt6_DIR: $env:Qt6_DIR"
+        cmake .. -DCMAKE_BUILD_TYPE=Release
       
     - name: Build
       working-directory: client/build
